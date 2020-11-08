@@ -230,13 +230,14 @@ void loop() {
 
   if(NowX==0 && NowY==0){ // 移動していなかったらボタンチェック
     b = buttonChk();
-    //Serial.print("B if ");
+    Serial.printf("b:%d ",b);
 
     if(b){
       //Serial.println("in... ");
       //点滅開始
       int c=1;
-      int ox,oy;
+      int ox=0;
+      int oy=0;
       while(c){
         ox=NowX;
         oy=NowY;
@@ -251,13 +252,14 @@ void loop() {
       }
       //Serial.print("C Loop Out   ");
       Score=Score+STAGE[MyX+ox][MyY+oy];
+      Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
       for(int i=STAGE[MyX+ox][MyY+oy];i>0;i=i-1){
          MyX=MyX+ox;
          MyY=MyY+oy;
-        // Serial.printf(s," MyX:%d MyY:%d Val:%d \n",MyX,MyY,STAGE[MyX][MyY]);
+         Serial.printf(" MyX:%d MyY:%d ox:%d oy:%d i:%d \n",MyX,MyY,ox,oy,i);
 //         tft.drawString(s, 110, 0, 2); // Draw the Number
          if(STAGE[MyX][MyY]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){
-            
+            i=0;  // これが必要だったみたい
             GameOver();
          }      
          playTone(1000-STAGE[MyX][MyY]*100, 100);
