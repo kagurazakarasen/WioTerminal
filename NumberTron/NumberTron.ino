@@ -19,6 +19,8 @@ int MyY = 8;
 int NowX = 0;
 int NowY = 0;
 
+uint16_t Score;
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -54,22 +56,33 @@ void setup() {
 
 }
 
+
 void stageInit(){
-    tft.fillScreen(ILI9341_WHITE);
+    tft.fillScreen(ILI9341_GREEN);
+
+    
+//    tft.setTextColor(TFT_GREEN);          //sets the text colour to black
+//    tft.setTextSize(2);                   //sets the size of text
+    
+    /*
     for(int i=TEXT_HEIGHT;i<PLAY_FIELD_HEIGHT*TEXT_HEIGHT;i+=1){
       tft.drawLine(TEXT_WIDTH-8,i,PLAY_FIELD_WIDTH*TEXT_WIDTH,i,ILI9341_BLACK); //drawRectangle も、fillRectangle も使えない！？
     }
+    */
+    tft.fillRect(TEXT_WIDTH-8, TEXT_HEIGHT, PLAY_FIELD_WIDTH*TEXT_WIDTH-8, PLAY_FIELD_HEIGHT*TEXT_HEIGHT-16 , ILI9341_BLACK);
 
  
     for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
       for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
           int n = random(1, 9);
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
-          tft.drawNumber(STAGE[x][y], x*TEXT_WIDTH, y*TEXT_HEIGHT, 2); // Draw the Number
+          //tft.drawNumber(STAGE[x][y], x*TEXT_WIDTH, y*TEXT_HEIGHT, 2); // Draw the Number
+          tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
       }
     }
     //初期キャラ位置
-    tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2);
+    //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2);
+    tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
     STAGE[MyX][MyY]=0;  // 空白は 0 とする。    
 
     tft.drawString(" < NUMBER TRON > ", 100, 0, 2); // Draw the Number character
@@ -119,7 +132,8 @@ int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら
 }
 
 void GameOver(){
-  tft.drawChar('#', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
+  //tft.drawChar('#', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
+  tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'#',TFT_RED, TFT_BLACK,2); // 自キャラ表示
   while(1){
     //
   }
@@ -144,13 +158,16 @@ void loop() {
         ox=NowX;
         oy=NowY;
         tft.drawString("  ", (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
-        delay(500);
-        tft.drawNumber(STAGE[MyX+ox][MyY+oy], (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); // Draw the Number
+        delay(200);
+        //tft.drawNumber(STAGE[MyX+ox][MyY+oy], (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); // Draw the Number
+        tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, 2);
+
         playTone(1014, 100); 
         c = buttonChk();
         tft.drawString("  ", (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
       }
       Serial.print("C Loop Out   ");
+      Score=Score+STAGE[MyX+ox][MyY+oy];
       for(int i=STAGE[MyX+ox][MyY+oy];i>0;i=i-1){
          MyX=MyX+ox;
          MyY=MyY+oy;
@@ -162,25 +179,28 @@ void loop() {
          }      
          playTone(1000-STAGE[MyX][MyY]*100, 100);
          playTone(1500, 30); 
-         tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
+         //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
+         tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_RED, TFT_BLACK,2); // 自キャラ表示
           STAGE[MyX][MyY]=0; // キャラ位置データも消去
-          delay(500);
+          delay(200);
       
           //tft.drawChar(' ', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2);
           tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
         
       }
+      char scr[10];
+      sprintf(scr,"[SC: %d]",Score);
+      tft.drawString(scr, 12, 0, 2); // Draw Score
 
     
     }else{
       tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
       playTone(1014, 100); 
-      tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
-      delay(500);
+      //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
+      tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
+      delay(200);
     }
 
   }
-  
-
-  
+ 
 }
