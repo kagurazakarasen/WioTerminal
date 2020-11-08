@@ -13,18 +13,22 @@ TFT_eSPI tft = TFT_eSPI();    // Invoke custom library
 
 int STAGE[PLAY_FIELD_WIDTH][PLAY_FIELD_HEIGHT];
 
-int MyX = 10; // Start Position
-int MyY = 8;
+#define X_START 10
+#define Y_START 8
 
-int NowX = 0;
-int NowY = 0;
+int MyX; // Start Position
+int MyY;
+
+int NowX;
+int NowY;
 
 uint16_t Score;
+uint16_t HiScore;
 
 
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(115200); // いらないよね
+  HiScore=0;
+  Serial.begin(115200); // いる。Serialからもコントロール可に。
   
    pinMode(WIO_KEY_A, INPUT_PULLUP);
    pinMode(WIO_KEY_B, INPUT_PULLUP);
@@ -41,6 +45,19 @@ void setup() {
     tft.init();
     tft.setRotation(3); // 3 がスティックのある面を下にした状態
 
+    gameStart();
+
+}
+
+void gameStart(){
+
+    MyX = X_START;
+    MyY = Y_START;
+    NowX = 0;
+    NowY = 0;
+    
+    Score=0;
+
    stageInit();
 
    Serial.print("Start ");
@@ -52,16 +69,13 @@ void setup() {
    
    NowY=0;
    NowX=0;
-
-
+  
 }
-
 
 void stageInit(){
     tft.fillScreen(ILI9341_GREEN);
-
-    
-//    tft.setTextColor(TFT_GREEN);          //sets the text colour to black
+   
+//    tft.setTextColor(TFT_GREEN);          //sets the text colour to black //これを入れると変になる。
 //    tft.setTextSize(2);                   //sets the size of text
     
     /*
@@ -128,29 +142,98 @@ int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら
    NowX=0;
   }
 
+  //Serialからコントロール
+  char key;     // 受信データを格納するchar型の変数
+
+  // 受信データがあった時だけ、処理を行う
+  if ( Serial.available() ) {       // 受信データがあるか？
+    key = Serial.read();            // 1文字だけ読み込む
+    Serial.write( key );            // 1文字送信。受信データをそのまま送り返す。
+    r=0;
+    switch(key){
+      case '1':
+        NowX=-1;
+        NowY=+1;  
+        r=1;
+        break;
+      case '2':
+        NowX=0;
+        NowY=+1;  
+        r=1;
+        break;
+      case '3':
+        NowX=+1;
+        NowY=+1;  
+        r=1;
+        break;
+      case '4':
+        NowX=-1;
+        NowY=0;  
+        r=1;
+        break;
+      case '5':
+        NowX=0;
+        NowY=0;  
+        //r=1;
+        break;
+      case '6':
+        NowX=+1;
+        NowY=0;  
+        r=1;
+        break;
+      case '7':
+        NowX=-1;
+        NowY=-1;  
+        r=1;
+        break;
+      case '8':
+        NowX=0;
+        NowY=-1;  
+        r=1;
+        break;
+      case '9':
+        NowX=+1;
+        NowY=-1;  
+        r=1;
+        break;
+    }
+
+  }
+
   return(r);
 }
 
 void GameOver(){
   //tft.drawChar('#', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
   tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'#',TFT_RED, TFT_BLACK,2); // 自キャラ表示
-  while(1){
-    //
+  playTone(1614, 1000); 
+
+  if(HiScore<Score){
+    tft.drawString(" You Got Hi-Score! ", 50, 110,2); 
+    HiScore=Score;
   }
+  scorePut();
+  
+  while(1){
+     if (digitalRead(WIO_5S_PRESS) == LOW) {
+        break;
+     }
+  }
+  gameStart();
 }
 
 void loop() {
 //  String s;
   char s[100];
  int b;
-    Serial.printf("NowX:%d , NowY:%d \n",NowX,NowY);
+    //Serial.printf("NowX:%d , NowY:%d \n",NowX,NowY);
 
   if(NowX==0 && NowY==0){ // 移動していなかったらボタンチェック
     b = buttonChk();
-    Serial.print("B if ");
+    //Serial.print("B if ");
 
     if(b){
-      Serial.println("in... ");
+      //Serial.println("in... ");
       //点滅開始
       int c=1;
       int ox,oy;
@@ -166,15 +249,15 @@ void loop() {
         c = buttonChk();
         tft.drawString("  ", (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
       }
-      Serial.print("C Loop Out   ");
+      //Serial.print("C Loop Out   ");
       Score=Score+STAGE[MyX+ox][MyY+oy];
       for(int i=STAGE[MyX+ox][MyY+oy];i>0;i=i-1){
          MyX=MyX+ox;
          MyY=MyY+oy;
-         Serial.printf(s," MyX:%d MyY:%d Val:%d \n",MyX,MyY,STAGE[MyX][MyY]);
+        // Serial.printf(s," MyX:%d MyY:%d Val:%d \n",MyX,MyY,STAGE[MyX][MyY]);
 //         tft.drawString(s, 110, 0, 2); // Draw the Number
          if(STAGE[MyX][MyY]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){
-            playTone(1614, 1000); 
+            
             GameOver();
          }      
          playTone(1000-STAGE[MyX][MyY]*100, 100);
@@ -188,10 +271,13 @@ void loop() {
           tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
         
       }
+      /*
       char scr[10];
-      sprintf(scr,"[SC: %d]",Score);
+      sprintf(scr," [SC: %d] ",Score);
       tft.drawString(scr, 12, 0, 2); // Draw Score
-
+      4
+      */
+      scorePut();
     
     }else{
       tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
@@ -203,4 +289,16 @@ void loop() {
 
   }
  
+}
+
+void scorePut(){
+    char scr[10];
+    sprintf(scr," [SC: %d] ",Score);
+    tft.drawString(scr, 12, 0, 2); // Draw Score
+
+    //char scr[10];
+    sprintf(scr," [Hi-S: %d] ",HiScore);
+    tft.drawString(scr, 240, 0, 2); // Draw Score
+
+
 }
