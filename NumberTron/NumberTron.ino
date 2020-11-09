@@ -72,11 +72,41 @@ void gameStart(){
   
 }
 
+// 背景色（塗りつぶし）付きのテキスト表示ルーチン
+void putString(String str, int32_t poX, int32_t poY,uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth){
+
+
+    //tft.setTextColor(color);
+    // tft.setTextBackgroundColor(TFT_BLACK);          // これがない・・・
+    //tft.setTextSize(textSize);                   //sets the size of text　（Charの2相当）Stringにのみにかかるのでここではか
+
+    //↑これの変わりを tft.drawCharを使っておこなう
+    
+    // Length (with one extra character for the null terminator)
+    int str_len = str.length() + 1; 
+    
+    // Prepare the character array (the buffer) 
+    char char_array[str_len];
+    
+    // Copy it over 
+    str.toCharArray(char_array, str_len);
+    
+    //String loop
+    //int ts = textSize * TEXT_WIDTH ; // 幅のみでみてる。
+    //int ts = textSize * 8 ;
+    for(int i=0;i<str_len;i++){
+      tft.drawChar( poX + (i * tWidth), poY, char_array[i],t_color, bg, textSize);
+    }
+
+    
+  
+}
+
 void stageInit(){
     tft.fillScreen(ILI9341_GREEN);
-   
-//    tft.setTextColor(TFT_GREEN);          //sets the text colour to black //これを入れると変になる。
-//    tft.setTextSize(2);                   //sets the size of text
+    //tft.setTextColor(TFT_WHITE);          //sets the text colour //これを入れると変になる。
+    // tft.setTextBackgroundColor(TFT_BLACK);          // これがない・・・
+    //tft.setTextSize(1);                   //sets the size of text　（Charの2相当）Stringにのみかかる？
     
     /*
     for(int i=TEXT_HEIGHT;i<PLAY_FIELD_HEIGHT*TEXT_HEIGHT;i+=1){
@@ -99,7 +129,9 @@ void stageInit(){
     tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
     STAGE[MyX][MyY]=0;  // 空白は 0 とする。    
 
-    tft.drawString(" < NUMBER TRON > ", 100, 0, 2); // Draw the Number character
+    //tft.drawString(" < NUMBER TRON > ", 100, 0, 2); // Draw the Number character
+    putString(" NUMBER TRON",0,0,TFT_WHITE,TFT_BLACK,2,11);
+    
     scorePut();
   
 }
@@ -210,7 +242,9 @@ void GameOver(){
   playTone(1614, 1000); 
 
   if(HiScore<Score){
-    tft.drawString(" You Got Hi-Score! ", 50, 110,2); 
+    //tft.drawString(" You Got Hi-Score! ", 50, 110,2); 
+    putString(" You Got Hi-Score! ",50,100,TFT_WHITE,TFT_BLACK,2,10);
+
     HiScore=Score;
   }
   scorePut();
@@ -305,13 +339,15 @@ void loop() {
 }
 
 void scorePut(){
-    char scr[10];
-    sprintf(scr," [SC: %d] ",Score);
-    tft.drawString(scr, 12, 0, 2); // Draw Score
+    char scr[16];
+    sprintf(scr,"Score:%d ",Score);
+    //tft.drawString(scr, 12, 0, 2); // Draw Score
+    putString(scr,4,224,TFT_WHITE,TFT_BLACK,2,10);
 
     //char scr[10];
     sprintf(scr," [Hi-S: %d] ",HiScore);
-    tft.drawString(scr, 240, 0, 2); // Draw Score
+    //tft.drawString(scr, 240, 0, 2); // Draw Score
+    putString(scr,200,0,TFT_WHITE,TFT_BLACK,2,10);
 
 
 }
