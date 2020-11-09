@@ -100,6 +100,7 @@ void stageInit(){
     STAGE[MyX][MyY]=0;  // 空白は 0 とする。    
 
     tft.drawString(" < NUMBER TRON > ", 100, 0, 2); // Draw the Number character
+    scorePut();
   
 }
 
@@ -253,6 +254,7 @@ void loop() {
       //Serial.print("C Loop Out   ");
       Score=Score+STAGE[MyX+ox][MyY+oy];
       Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
+      int GOF=0;  // GameOver FLAG
       for(int i=STAGE[MyX+ox][MyY+oy];i>0;i=i-1){
          MyX=MyX+ox;
          MyY=MyY+oy;
@@ -260,7 +262,9 @@ void loop() {
 //         tft.drawString(s, 110, 0, 2); // Draw the Number
          if(STAGE[MyX][MyY]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){
             i=0;  // これが必要だったみたい
-            GameOver();
+            //GameOver();
+            GOF=1;  // ↑でOKだったが、念のためちゃんとループ脱出するようにしておく。
+            break;
          }      
          playTone(1000-STAGE[MyX][MyY]*100, 100);
          playTone(1500, 30); 
@@ -273,12 +277,10 @@ void loop() {
           tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
         
       }
-      /*
-      char scr[10];
-      sprintf(scr," [SC: %d] ",Score);
-      tft.drawString(scr, 12, 0, 2); // Draw Score
-      4
-      */
+      if(GOF){
+        GameOver();
+      }
+
       scorePut();
     
     }else{
