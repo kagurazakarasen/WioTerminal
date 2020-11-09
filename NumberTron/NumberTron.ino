@@ -88,7 +88,7 @@ void stageInit(){
  
     for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
       for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
-          int n = random(1, 9);
+          int n = random(1, 10);
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
           //tft.drawNumber(STAGE[x][y], x*TEXT_WIDTH, y*TEXT_HEIGHT, 2); // Draw the Number
           tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
