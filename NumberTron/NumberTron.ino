@@ -243,18 +243,21 @@ void loop() {
         ox=NowX;
         oy=NowY;
         //tft.drawString("  ", (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
-        tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
+        tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,'.',ILI9341_GREEN, ILI9341_BLACK, 2);
         delay(200);
         //tft.drawNumber(STAGE[MyX+ox][MyY+oy], (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); // Draw the Number
         if(STAGE[MyX+ox][MyY+oy]>0){ // 正の数なら（数字が入っていたら）
           tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, 2);
+        } else {
+          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
         }
 
         playTone(1014, 100); 
         c = buttonChk();
         //tft.drawString("  ", (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
-        tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
+//        tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
       }
+      tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
       //Serial.print("C Loop Out   ");
       Score=Score+STAGE[MyX+ox][MyY+oy];
       Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
@@ -278,7 +281,8 @@ void loop() {
           delay(200);
       
           //tft.drawChar(' ', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2);
-          tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
+          //tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
+          tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
         
       }
       if(GOF){
@@ -288,7 +292,8 @@ void loop() {
       scorePut();
     
     }else{
-      tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
+      //tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
+      tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
       playTone(1014, 100); 
       //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
       tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
