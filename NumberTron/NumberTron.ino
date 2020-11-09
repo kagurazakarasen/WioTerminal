@@ -243,7 +243,7 @@ void GameOver(){
 
   if(HiScore<Score){
     //tft.drawString(" You Got Hi-Score! ", 50, 110,2); 
-    putString(" You Got Hi-Score! ",50,100,TFT_WHITE,TFT_BLACK,2,10);
+    putString(" You Got Hi-Score! ",50,100,TFT_YELLOW,TFT_BLACK,2,10);
 
     HiScore=Score;
   }
