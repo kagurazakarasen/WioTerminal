@@ -72,6 +72,22 @@ void gameStart(){
   
 }
 
+// カド丸長方形つきテキスト表示
+void putRoundRect(String str,int32_t x, int32_t y,  uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth,   int32_t r, uint32_t rColor){
+//    tft.drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t col);
+
+    int32_t w = tWidth * (str.length() + 1) + (r * 2);
+    int32_t h = (r * 2) + tWidth;
+
+    tft.fillRoundRect(x - tWidth, y - tWidth + (r/2), w,  h, r,  bg);
+
+    tft.drawRoundRect( x - tWidth, y - tWidth + (r/2),  w, h, r, rColor);
+
+    putString( str, x, y ,t_color,  bg, textSize, tWidth);
+
+
+}
+
 // 背景色（塗りつぶし）付きのテキスト表示ルーチン
 void putString(String str, int32_t poX, int32_t poY,uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth){
 
@@ -243,7 +259,10 @@ void GameOver(){
 
   if(HiScore<Score){
     //tft.drawString(" You Got Hi-Score! ", 50, 110,2); 
-    putString(" You Got Hi-Score! ",50,100,TFT_YELLOW,TFT_BLACK,2,10);
+    //putString(" You Got Hi-Score! ",50,100,TFT_YELLOW,TFT_BLACK,2,10);
+
+    putRoundRect("You Got Hi-Score!",70, 100,  TFT_RED,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+
 
     HiScore=Score;
   }
