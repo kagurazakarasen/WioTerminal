@@ -117,15 +117,7 @@ void putString(String str, int32_t poX, int32_t poY,uint32_t t_color, uint32_t b
 
 void stageInit(){
     tft.fillScreen(ILI9341_GREEN);
-    //tft.setTextColor(TFT_WHITE);          //sets the text colour //これを入れると変になる。
-    // tft.setTextBackgroundColor(TFT_BLACK);          // これがない・・・
-    //tft.setTextSize(1);                   //sets the size of text　（Charの2相当）Stringにのみかかる？
-    
-    /*
-    for(int i=TEXT_HEIGHT;i<PLAY_FIELD_HEIGHT*TEXT_HEIGHT;i+=1){
-      tft.drawLine(TEXT_WIDTH-8,i,PLAY_FIELD_WIDTH*TEXT_WIDTH,i,ILI9341_BLACK); //drawRectangle も、fillRectangle も使えない！？
-    }
-    */
+
     tft.fillRect(TEXT_WIDTH-8, TEXT_HEIGHT, PLAY_FIELD_WIDTH*TEXT_WIDTH-8, PLAY_FIELD_HEIGHT*TEXT_HEIGHT-16 , ILI9341_BLACK);
 
  
@@ -294,26 +286,26 @@ void loop() {
       while(c){
         ox=NowX;
         oy=NowY;
-        //tft.drawString("  ", (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
-        tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,'.',ILI9341_GREEN, ILI9341_BLACK, 2);
+        tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,'.',ILI9341_GREEN, ILI9341_BLACK, 2); // キー入力方向いったん消し
         delay(200);
-        //tft.drawNumber(STAGE[MyX+ox][MyY+oy], (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT, 2); // Draw the Number
         if(STAGE[MyX+ox][MyY+oy]>0){ // 正の数なら（数字が入っていたら）
-          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, 2);
+          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, 2);  // 数字再プロット
         } else {
-          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
+          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2); // 数字でなければ（０）なら空白
         }
-
         playTone(1014, 100); 
         c = buttonChk();
-        //tft.drawString("  ", (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
-//        tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
       }
-      tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
+      tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2); // 自キャラ位置消し
       //Serial.print("C Loop Out   ");
-      Score=Score+STAGE[MyX+ox][MyY+oy];
+      Score=Score+STAGE[MyX+ox][MyY+oy];  // 移動 （無移動もあり得る）
       Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
       int GOF=0;  // GameOver FLAG
+       if(STAGE[MyX+ox][MyY+oy]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){  // 一歩目自殺。これでforループをくくったほうがシンプル？
+           MyX=MyX+ox;
+           MyY=MyY+oy;
+           GOF=1;  
+       }      
       for(int i=STAGE[MyX+ox][MyY+oy];i>0;i=i-1){
          MyX=MyX+ox;
          MyY=MyY+oy;
