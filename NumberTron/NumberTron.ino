@@ -74,7 +74,6 @@ void gameStart(){
 
 // カド丸長方形つきテキスト表示
 void putRoundRect(String str,int32_t x, int32_t y,  uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth,   int32_t r, uint32_t rColor){
-//    tft.drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t col);
 
     int32_t w = tWidth * (str.length() + 1) + (r * 2);
     int32_t h = (r * 2) + tWidth;
@@ -84,8 +83,6 @@ void putRoundRect(String str,int32_t x, int32_t y,  uint32_t t_color, uint32_t b
     tft.drawRoundRect( x - tWidth, y - tWidth + (r/2),  w, h, r, rColor);
 
     putString( str, x, y ,t_color,  bg, textSize, tWidth);
-
-
 }
 
 // 背景色（塗りつぶし）付きのテキスト表示ルーチン
@@ -263,11 +260,13 @@ void GameOver(){
 
     putRoundRect("You Got Hi-Score!",70, 100,  TFT_RED,TFT_BLACK,2,10,  8,  TFT_YELLOW);
 
-
     HiScore=Score;
   }
+
   scorePut();
-  
+
+  putRoundRect("Press buttton to restart!",110, 210,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+
   while(1){
      if (digitalRead(WIO_5S_PRESS) == LOW) {
         break;
@@ -359,14 +358,27 @@ void loop() {
 
 void scorePut(){
     char scr[16];
-    sprintf(scr,"Score:%d ",Score);
+    sprintf(scr,"Score:%d",Score);
     //tft.drawString(scr, 12, 0, 2); // Draw Score
-    putString(scr,4,224,TFT_WHITE,TFT_BLACK,2,10);
+    //putString(scr,4,224,TFT_WHITE,TFT_BLACK,2,10);
+    putRoundRect(scr,8,230,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+
 
     //char scr[10];
-    sprintf(scr," [Hi-S: %d] ",HiScore);
+    sprintf(scr,"HiScore: %d",HiScore);
     //tft.drawString(scr, 240, 0, 2); // Draw Score
-    putString(scr,200,0,TFT_WHITE,TFT_BLACK,2,10);
+    //putString(scr,200,0,TFT_WHITE,TFT_BLACK,2,10);
+    int w=0;
+    if(HiScore>9){
+      w=w+1;
+      if(HiScore>99){
+        w=w+1;
+        if(HiScore>999){
+          w=w+1;
+        }
+      }
+    }
+    putRoundRect(scr,228-(w*8),4,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
 
 
 }
