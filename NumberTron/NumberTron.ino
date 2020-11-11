@@ -75,6 +75,7 @@ void gameStart(){
 
    while( !buttonChk() ){
     // start loop
+    playerModeSelect();
    }
     Serial.println(": ");
    
@@ -85,10 +86,8 @@ void gameStart(){
 
 
 void stageInit(){
-    tft.fillScreen(ILI9341_GREEN);
 
-    tft.fillRect(TEXT_WIDTH-8, TEXT_HEIGHT, PLAY_FIELD_WIDTH*TEXT_WIDTH-8, PLAY_FIELD_HEIGHT*TEXT_HEIGHT-16 , ILI9341_BLACK);
- 
+    // マップデータセット
     for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
       for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
           int n = random(1, 10);
@@ -99,15 +98,31 @@ void stageInit(){
               if(n>7){
                 n = random(1, 10);
                 if(n>8){
-                  n = random(1, 10);
+                  //n = random(1, 10);  // 9がレアすぎてしまうのでここはオフ
                 }
               }
             }
           }
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
+          //tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
+      }
+    }
+    
+    stageProt();
+  
+}
+
+void stageProt(){
+    tft.fillScreen(ILI9341_GREEN);
+    tft.fillRect(TEXT_WIDTH-8, TEXT_HEIGHT, PLAY_FIELD_WIDTH*TEXT_WIDTH-8, PLAY_FIELD_HEIGHT*TEXT_HEIGHT-16 , ILI9341_BLACK);
+
+    // マップデータ描画
+    for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
+      for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
           tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
       }
     }
+
     //初期キャラ位置
     tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
     STAGE[MyX][MyY]=0;  // 空白は 0 とする。    
@@ -115,8 +130,9 @@ void stageInit(){
     putString(" NUMBER TRON",0,0,TFT_WHITE,TFT_BLACK,2,11);
     
     scorePut();
-  
+
 }
+
 
 int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら1が戻り、なければ０を返す
   int r=1;
@@ -218,34 +234,44 @@ void GameOver(){
   char txt[26];
 
   int higher;
-
-  if(NowPlayer==1){
-    putRoundRect("OPS! Player1 is DEAD !!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
-    if(ScoreP1>ScoreP2){
-      // P1 END で P1自分が勝ってる
-      higher =1;
-      putRoundRect("But ! You are WIN !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
-    } else {
-      higher =2;
-      putRoundRect("And You are LOSE !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
-    }
-  } else {
-    putRoundRect("OPS! Player2 is DEAD !!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
-    if(ScoreP2>ScoreP1){
-      putRoundRect("But ! You are WIN !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
-      higher =2;
-    } else {
-      higher =1;
-      putRoundRect("And You are LOSE !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
-    }
-  }
-
   int score;
-  if(higher==1){
-    score = ScoreP1;
+
+
+  if(PlayerMode==2){
+      if(NowPlayer==1){
+        putRoundRect("OPS! Player1 is DEAD !!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+        if(ScoreP1>ScoreP2){
+          // P1 END で P1自分が勝ってる
+          higher =1;
+          putRoundRect("But ! You are WIN !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+        } else {
+          higher =2;
+          putRoundRect("And You are LOSE !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+        }
+      } else {
+        putRoundRect("OPS! Player2 is DEAD !!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+        if(ScoreP2>ScoreP1){
+          putRoundRect("But ! You are WIN !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+          higher =2;
+        } else {
+          higher =1;
+          putRoundRect("And You are LOSE !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+        }
+      }
+
+      if(higher==1){
+        score = ScoreP1;
+      } else {
+        score = ScoreP2;
+      }
+
+
   } else {
-    score = ScoreP2;
+      putRoundRect("OPS!!!!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+      putRoundRect("G A M E O V E R !",80,62,TFT_RED,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+      score = ScoreP1;
   }
+
 
   if(HiScore<score){
       sprintf(txt,"P:%d Got Hi-Score!!",higher);
@@ -260,11 +286,34 @@ void GameOver(){
   putRoundRect("Press buttton to restart!",110, 210,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
 
   while(1){
+    playerModeSelect();
      if (digitalRead(WIO_5S_PRESS) == LOW) {
         break;
      }
   }
   gameStart();
+}
+
+
+void playerModeSelect(){
+  char txt[40];
+       if (digitalRead(WIO_KEY_C) == LOW) { // PlayerMode Change
+        if(PlayerMode==1){
+          PlayerMode=2;
+        }else{
+          PlayerMode=1;
+        }
+        sprintf(txt,"Player mode %d",PlayerMode);
+
+        putRoundRect(txt,10, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+        while(1){
+          if (digitalRead(WIO_KEY_C) != LOW) { // PlayerMode Change
+              stageProt();
+              break;
+          }
+        }
+     }
+    
 }
 
 
