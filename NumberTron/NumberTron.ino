@@ -16,18 +16,26 @@ int STAGE[PLAY_FIELD_WIDTH][PLAY_FIELD_HEIGHT];
 #define X_START 10
 #define Y_START 8
 
+int PlayerMode = 2;  // 1 = OnePlayer / 2= TwoPlayers
+
+int NowPlayer = 1;  // 現在のプレイヤー
+
 int MyX; // Start Position
 int MyY;
 
-int NowX;
+int NowX; // 現在のポジション
 int NowY;
 
-uint16_t Score;
+uint16_t ScoreP1;
+uint16_t ScoreP2;
 uint16_t HiScore;
 
 
 void setup() {
   HiScore=0;
+  ScoreP1 =0;
+  ScoreP2 =0;
+
   Serial.begin(115200); // いる。Serialからもコントロール可に。
   
    pinMode(WIO_KEY_A, INPUT_PULLUP);
@@ -56,7 +64,10 @@ void gameStart(){
     NowX = 0;
     NowY = 0;
     
-    Score=0;
+    ScoreP1=0;
+    ScoreP2=0;
+
+    NowPlayer = 1;
 
    stageInit();
 
@@ -72,54 +83,11 @@ void gameStart(){
   
 }
 
-// カド丸長方形つきテキスト表示
-void putRoundRect(String str,int32_t x, int32_t y,  uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth,   int32_t r, uint32_t rColor){
-
-    int32_t w = tWidth * (str.length() + 1) + (r * 2);
-    int32_t h = (r * 2) + tWidth;
-
-    tft.fillRoundRect(x - tWidth, y - tWidth + (r/2), w,  h, r,  bg);
-
-    tft.drawRoundRect( x - tWidth, y - tWidth + (r/2),  w, h, r, rColor);
-
-    putString( str, x, y ,t_color,  bg, textSize, tWidth);
-}
-
-// 背景色（塗りつぶし）付きのテキスト表示ルーチン
-void putString(String str, int32_t poX, int32_t poY,uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth){
-
-
-    //tft.setTextColor(color);
-    // tft.setTextBackgroundColor(TFT_BLACK);          // これがない・・・
-    //tft.setTextSize(textSize);                   //sets the size of text　（Charの2相当）Stringにのみにかかるのでここではか
-
-    //↑これの変わりを tft.drawCharを使っておこなう
-    
-    // Length (with one extra character for the null terminator)
-    int str_len = str.length() + 1; 
-    
-    // Prepare the character array (the buffer) 
-    char char_array[str_len];
-    
-    // Copy it over 
-    str.toCharArray(char_array, str_len);
-    
-    //String loop
-    //int ts = textSize * TEXT_WIDTH ; // 幅のみでみてる。
-    //int ts = textSize * 8 ;
-    for(int i=0;i<str_len;i++){
-      tft.drawChar( poX + (i * tWidth), poY, char_array[i],t_color, bg, textSize);
-    }
-
-    
-  
-}
 
 void stageInit(){
     tft.fillScreen(ILI9341_GREEN);
 
     tft.fillRect(TEXT_WIDTH-8, TEXT_HEIGHT, PLAY_FIELD_WIDTH*TEXT_WIDTH-8, PLAY_FIELD_HEIGHT*TEXT_HEIGHT-16 , ILI9341_BLACK);
-
  
     for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
       for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
@@ -137,29 +105,17 @@ void stageInit(){
             }
           }
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
-          //tft.drawNumber(STAGE[x][y], x*TEXT_WIDTH, y*TEXT_HEIGHT, 2); // Draw the Number
           tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
       }
     }
     //初期キャラ位置
-    //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2);
     tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
     STAGE[MyX][MyY]=0;  // 空白は 0 とする。    
 
-    //tft.drawString(" < NUMBER TRON > ", 100, 0, 2); // Draw the Number character
     putString(" NUMBER TRON",0,0,TFT_WHITE,TFT_BLACK,2,11);
     
     scorePut();
   
-}
-
-void playTone(int tone, int duration) {
-  for (long i = 0; i < duration * 1000L; i += tone * 2) {
-      digitalWrite(BUZZER_PIN, HIGH);
-      delayMicroseconds(tone);
-      digitalWrite(BUZZER_PIN, LOW);
-      delayMicroseconds(tone);
-  }
 }
 
 int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら1が戻り、なければ０を返す
@@ -258,13 +214,45 @@ void GameOver(){
   tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'#',TFT_RED, TFT_BLACK,2); // 自キャラ表示
   playTone(1614, 1000); 
 
-  if(HiScore<Score){
-    //tft.drawString(" You Got Hi-Score! ", 50, 110,2); 
-    //putString(" You Got Hi-Score! ",50,100,TFT_YELLOW,TFT_BLACK,2,10);
 
-    putRoundRect("You Got Hi-Score!",70, 100,  TFT_RED,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+  char txt[26];
 
-    HiScore=Score;
+  int higher;
+
+  if(NowPlayer==1){
+    putRoundRect("OPS! Player1 is DEAD !!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+    if(ScoreP1>ScoreP2){
+      // P1 END で P1自分が勝ってる
+      higher =1;
+      putRoundRect("But ! You are WIN !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+    } else {
+      higher =2;
+      putRoundRect("And You are LOSE !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+    }
+  } else {
+    putRoundRect("OPS! Player2 is DEAD !!",50,32,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+    if(ScoreP2>ScoreP1){
+      putRoundRect("But ! You are WIN !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+      higher =2;
+    } else {
+      higher =1;
+      putRoundRect("And You are LOSE !!",70,60,TFT_WHITE,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+    }
+  }
+
+  int score;
+  if(higher==1){
+    score = ScoreP1;
+  } else {
+    score = ScoreP2;
+  }
+
+  if(HiScore<score){
+      sprintf(txt,"P:%d Got Hi-Score!!",higher);
+
+    putRoundRect(txt,70, 100,  TFT_RED,TFT_BLACK,2,10,  8,  TFT_YELLOW);
+
+    HiScore=score;
   }
 
   scorePut();
@@ -278,6 +266,7 @@ void GameOver(){
   }
   gameStart();
 }
+
 
 void loop() {
 //  String s;
@@ -295,6 +284,7 @@ void loop() {
       int c=1;
       int ox=0;
       int oy=0;
+
       while(c){
         ox=NowX;
         oy=NowY;
@@ -309,8 +299,14 @@ void loop() {
         c = buttonChk();
       }
       tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2); // 自キャラ位置消し
-      //Serial.print("C Loop Out   ");
-      Score=Score+STAGE[MyX+ox][MyY+oy];  // 移動 （無移動もあり得る）
+      
+
+      if(NowPlayer==1){  // スコアアップ
+          ScoreP1=ScoreP1+STAGE[MyX+ox][MyY+oy];  
+      }else{
+          ScoreP2=ScoreP2+STAGE[MyX+ox][MyY+oy];  
+      }
+
       Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
       int GOF=0;  // GameOver FLAG
        if(STAGE[MyX+ox][MyY+oy]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){  // 一歩目自殺。これでforループをくくったほうがシンプル？
@@ -322,7 +318,6 @@ void loop() {
          MyX=MyX+ox;
          MyY=MyY+oy;
          Serial.printf(" MyX:%d MyY:%d ox:%d oy:%d i:%d \n",MyX,MyY,ox,oy,i);
-//         tft.drawString(s, 110, 0, 2); // Draw the Number
          if(STAGE[MyX][MyY]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){
             i=0;  // これが必要だったみたい
             //GameOver();
@@ -336,22 +331,30 @@ void loop() {
           STAGE[MyX][MyY]=0; // キャラ位置データも消去
           delay(200);
       
-          //tft.drawChar(' ', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2);
-          //tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
           tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
         
       }
       if(GOF){
         GameOver();
+      } else {
+        // ゲームオーバーではなかったらプレイヤーチェンジ
+        // Player Change
+        if(PlayerMode==2){
+            Serial.printf("Player Change :%d -> ",NowPlayer);
+            if(NowPlayer==1){
+                NowPlayer=2;
+            }else{
+                NowPlayer=1;
+            }
+            Serial.printf("%d \n",NowPlayer);
+        }
+        scorePut();
       }
 
-      scorePut();
     
     }else{
-      //tft.drawString("  ", MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); //Char(一文字）だとゴミが残る
       tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
       playTone(1014, 100); 
-      //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
       tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
       delay(200);
     }
@@ -360,19 +363,47 @@ void loop() {
  
 }
 
+void playerInfo(){
+      //Player Info
+      char pls[16]; 
+      sprintf(pls,"P%ds turn!",NowPlayer);
+      putRoundRect(pls,130,230,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+}
+
 void scorePut(){
+
+    //playerInfo();
+  
     char scr[16];
-    sprintf(scr,"Score:%d",Score);
-    //tft.drawString(scr, 12, 0, 2); // Draw Score
-    //putString(scr,4,224,TFT_WHITE,TFT_BLACK,2,10);
-    putRoundRect(scr,8,230,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+    sprintf(scr,"P1-Score:%d",ScoreP1);
+    if(NowPlayer==1){
+      putRoundRect(scr,8,230,TFT_BLACK,TFT_RED,1,8,  4,  TFT_RED);
+    }else{
+      putRoundRect(scr,8,230,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+    }
 
-
-    //char scr[10];
-    sprintf(scr,"HiScore: %d",HiScore);
-    //tft.drawString(scr, 240, 0, 2); // Draw Score
-    //putString(scr,200,0,TFT_WHITE,TFT_BLACK,2,10);
     int w=0;
+    if(PlayerMode==2){
+        sprintf(scr,"P2-Score:%d",ScoreP2);
+        //int w=0;
+        if(ScoreP2>9){
+          w=w+1;
+          if(ScoreP2>99){
+            w=w+1;
+            if(ScoreP2>999){
+              w=w+1;
+            }
+          }
+        }
+        if(NowPlayer==2){
+          putRoundRect(scr,220-(w*8),230,TFT_BLACK,TFT_RED,1,8,  4,  TFT_RED);
+        }else{
+          putRoundRect(scr,220-(w*8),230,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+        }
+    }
+
+    sprintf(scr,"HiScore: %d",HiScore);
+    w=0;
     if(HiScore>9){
       w=w+1;
       if(HiScore>99){
@@ -385,4 +416,44 @@ void scorePut(){
     putRoundRect(scr,228-(w*8),4,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
 
 
+}
+
+void playTone(int tone, int duration) {
+  for (long i = 0; i < duration * 1000L; i += tone * 2) {
+      digitalWrite(BUZZER_PIN, HIGH);
+      delayMicroseconds(tone);
+      digitalWrite(BUZZER_PIN, LOW);
+      delayMicroseconds(tone);
+  }
+}
+
+// カド丸長方形つきテキスト表示
+void putRoundRect(String str,int32_t x, int32_t y,  uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth,   int32_t r, uint32_t rColor){
+
+    int32_t w = tWidth * (str.length() + 1) + (r * 2);
+    int32_t h = (r * 2) + tWidth;
+
+    tft.fillRoundRect(x - tWidth, y - tWidth + (r/2), w,  h, r,  bg);
+
+    tft.drawRoundRect( x - tWidth, y - tWidth + (r/2),  w, h, r, rColor);
+
+    putString( str, x, y ,t_color,  bg, textSize, tWidth);
+}
+
+// 背景色（塗りつぶし）付きのテキスト表示ルーチン
+void putString(String str, int32_t poX, int32_t poY,uint32_t t_color, uint32_t bg, uint8_t textSize,int tWidth){
+    
+    // Length (with one extra character for the null terminator)
+    int str_len = str.length() + 1; 
+    
+    // Prepare the character array (the buffer) 
+    char char_array[str_len];
+    
+    // Copy it over 
+    str.toCharArray(char_array, str_len);
+    
+    for(int i=0;i<str_len;i++){
+      tft.drawChar( poX + (i * tWidth), poY, char_array[i],t_color, bg, textSize);
+    }
+  
 }
