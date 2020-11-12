@@ -16,6 +16,7 @@ int STAGE[PLAY_FIELD_WIDTH][PLAY_FIELD_HEIGHT];
 #define X_START 10
 #define Y_START 8
 
+int GameLevel =1; // ゲームレベル
 int PlayerMode = 1;  // 1 = OnePlayer / 2= TwoPlayers
 
 int NowPlayer = 1;  // 現在のプレイヤー
@@ -124,18 +125,22 @@ void stageInit(){
     for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
       for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
           int n = random(1, 10);
-          if(n>5){
-            n = random(1, 10);
-            if(n>6){
-              n = random(1, 10);
-              if(n>7){
+          
+          if(GameLevel==1){ // EASY レベルなら数字を低めにする
+              if(n>5){
                 n = random(1, 10);
-                if(n>8){
-                  //n = random(1, 10);  // 9がレアすぎてしまうのでここはオフ
+                if(n>6){
+                  n = random(1, 10);
+                  if(n>7){
+                    n = random(1, 10);
+                    if(n>8){
+                      //n = random(1, 10);  // 9がレアすぎてしまうのでここはオフ
+                    }
+                  }
                 }
               }
-            }
           }
+
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
           //tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
       }
@@ -336,6 +341,8 @@ void GameOver(){
 
 void playerModeSelect(){
   char txt[40];
+
+  //Palyer Mode Select
        if (digitalRead(WIO_KEY_C) == LOW) { // PlayerMode Change
         if(PlayerMode==1){
           PlayerMode=2;
@@ -355,7 +362,31 @@ void playerModeSelect(){
           }
         }
      }
-    
+
+  // Game level Select
+      if (digitalRead(WIO_KEY_B) == LOW) { // PlayerMode Change
+        if(GameLevel==1){
+          GameLevel=2;
+          putRoundRect("Level HIGH",20, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+        }else{
+          GameLevel=1;
+          putRoundRect("Level EASY",20, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+        }
+        //sprintf(txt,"Game Level  %d",PlayerMode);
+
+        //putRoundRect(txt,10, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+        while(1){
+          if (digitalRead(WIO_KEY_B) != LOW) { // PlayerMode Change
+              //stageProt();
+              //sprintf(txt,"Player mode %d !",PlayerMode);
+              //putRoundRect(txt,50, 100,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+              putRoundRect("Press Button to Start",50, 140,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+              break;
+          }
+        }
+     }
+
+
 }
 
 
