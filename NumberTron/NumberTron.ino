@@ -98,6 +98,14 @@ void firstScreen(){
   putRoundRect("Level",80, 6,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
   putRoundRect("Map",160, 6,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
 
+for(int i=0;i<30;i++){
+     int x = random(0, 26);
+    tft.drawChar( x*10 + 30 , 120,random(0, 10)+48,TFT_WHITE, TFT_BLUE, 2);
+    playTone(random(200, 2000), 50);
+}
+
+
+
   putRoundRect("You can control it with a 5-Way Switch",6, 230,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
 
 
