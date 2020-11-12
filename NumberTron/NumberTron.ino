@@ -16,7 +16,7 @@ int STAGE[PLAY_FIELD_WIDTH][PLAY_FIELD_HEIGHT];
 #define X_START 10
 #define Y_START 8
 
-int PlayerMode = 2;  // 1 = OnePlayer / 2= TwoPlayers
+int PlayerMode = 1;  // 1 = OnePlayer / 2= TwoPlayers
 
 int NowPlayer = 1;  // 現在のプレイヤー
 
@@ -36,7 +36,7 @@ void setup() {
   ScoreP1 =0;
   ScoreP2 =0;
 
-  Serial.begin(115200); // いる。Serialからもコントロール可に。
+  Serial.begin(115200); // デバッグ用のほか、Serialからもコントロール可にしておく。
   
    pinMode(WIO_KEY_A, INPUT_PULLUP);
    pinMode(WIO_KEY_B, INPUT_PULLUP);
@@ -49,11 +49,41 @@ void setup() {
   
    pinMode(BUZZER_PIN, OUTPUT);
 
-    randomSeed(analogRead(A0)); // ランダムシード
+    randomSeed(analogRead(A0)); // ランダムシードはガンダムシードに似ている（違
+
+    // tft 画面初期設定
     tft.init();
     tft.setRotation(3); // 3 がスティックのある面を下にした状態
 
+    firstScreen();
     gameStart();
+
+}
+
+void firstScreen(){
+  tft.fillScreen(TFT_BLUE);
+
+  putString("NUMBER TRON mini",10, 60,TFT_WHITE, TFT_BLUE, 2,12);
+
+  putString("ORIGINAL GAME DESIGN",320-(20*10), 160,TFT_WHITE, TFT_BLUE, 1,10);
+
+  putString("JACHIM FROHOLT"              ,320-(14*10), 175,TFT_WHITE, TFT_BLUE, 1,10);
+
+  putString("WIO VERSION PROGRAM",320-(19*10), 190,TFT_WHITE, TFT_BLUE, 1,10);
+  putString("RASEN KAGURAZAKA"       ,320-(16*10), 205,TFT_WHITE, TFT_BLUE, 1,10);
+
+  tft.drawLine(24, 240, 24, 118, TFT_WHITE);
+  putString("01234567890123456789012345",30, 120,TFT_WHITE, TFT_BLUE, 2,10);
+  tft.drawLine(294,0, 294, 136, TFT_WHITE);
+  tft.drawLine(24, 118, 294, 118,TFT_WHITE);
+  tft.drawLine(24, 136, 294, 136,TFT_WHITE);
+
+  putRoundRect("1P/2P",5, 6,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
+  putRoundRect("Level",80, 6,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
+  putRoundRect("Map",160, 6,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
+
+  putRoundRect("You can control it with a 5-Way Switch",6, 230,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
+
 
 }
 
@@ -69,8 +99,8 @@ void gameStart(){
 
     NowPlayer = 1;
 
-   stageInit();
-
+   //stageInit();
+    
    Serial.print("Start ");
 
    while( !buttonChk() ){
@@ -78,7 +108,10 @@ void gameStart(){
     playerModeSelect();
    }
     Serial.println(": ");
-   
+
+    stageInit();
+    stageProt();   // あった方が良いがスタート時に入力が一つ増える
+
    NowY=0;
    NowX=0;
   
@@ -108,7 +141,7 @@ void stageInit(){
       }
     }
     
-    stageProt();
+    //stageProt();
   
 }
 
@@ -119,7 +152,9 @@ void stageProt(){
     // マップデータ描画
     for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
       for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
-          tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
+          if(STAGE[x][y]>0){
+            tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
+          }
       }
     }
 
@@ -158,7 +193,11 @@ int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら
   }else if (digitalRead(WIO_5S_RIGHT) == LOW) {
       NowY=0;
       NowX=+1;
-  }else{
+  }else if (digitalRead(WIO_5S_PRESS) == LOW){
+   r=1;
+   NowY=0;
+   NowX=0;
+  }else {
    r=0;
    NowY=0;
    NowX=0;
@@ -308,7 +347,10 @@ void playerModeSelect(){
         putRoundRect(txt,10, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
         while(1){
           if (digitalRead(WIO_KEY_C) != LOW) { // PlayerMode Change
-              stageProt();
+              //stageProt();
+              sprintf(txt,"Player mode %d !",PlayerMode);
+              putRoundRect(txt,50, 100,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+              putRoundRect("Press Button to Start",50, 140,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
               break;
           }
         }
