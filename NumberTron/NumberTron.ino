@@ -3,21 +3,36 @@
 
 TFT_eSPI tft = TFT_eSPI();    // Invoke custom library
 
-#define TEXT_HEIGHT     16     // Height of text to be printed and scrolled
-#define TEXT_WIDTH     16     
-#define PLAY_FIELD_WIDTH  19
-#define PLAY_FIELD_HEIGHT    14
+/*
+#define TextHeight    16  
+#define TextWidth    16   
+*/
 
+// #define PFW 19
+// #define PFH 14
+
+
+#define TMS 8     // キャラの最小サイズ（ドット）
+
+int TextHeight   = TMS;
+int TextWidth    = TMS;
+
+#define PFW 38    // プレイフィールドの最大サイズ
+#define PFH 28
+
+int PlayFieldWidth   = PFW;
+int PlayFieldHeight  = PFH;
 
 #define BUZZER_PIN WIO_BUZZER
 
-int STAGE[PLAY_FIELD_WIDTH][PLAY_FIELD_HEIGHT];
+int STAGE[PFW][PFH];
 
 #define X_START 10
 #define Y_START 8
 
 int GameLevel =1; // ゲームレベル
 int PlayerMode = 1;  // 1 = OnePlayer / 2= TwoPlayers
+int MapCharSize = 2;  // 2 is Nomal
 
 int NowPlayer = 1;  // 現在のプレイヤー
 
@@ -102,6 +117,19 @@ void gameStart(){
 
    //stageInit();
     
+        if(MapCharSize==2){
+          TextHeight   = TMS * 2;
+          TextWidth    = TMS * 2;
+          PlayFieldWidth   = PFW / 2;
+          PlayFieldHeight  = PFH / 2;
+        }else{
+          TextHeight   = TMS;
+          TextWidth    = TMS;
+          PlayFieldWidth   = PFW;
+          PlayFieldHeight  = PFH;
+        }
+
+
    Serial.print("Start ");
 
    while( !buttonChk() ){
@@ -122,8 +150,8 @@ void gameStart(){
 void stageInit(){
 
     // マップデータセット
-    for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
-      for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
+    for (int y = 1; y < PlayFieldHeight; y += 1) {        
+      for (int x = 1; x < PlayFieldWidth; x += 1) {
           int n = random(1, 10);
           
           if(GameLevel==1){ // EASY レベルなら数字を低めにする
@@ -142,7 +170,7 @@ void stageInit(){
           }
 
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
-          //tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
+          //tft.drawChar( x*TextWidth, y*TextHeight,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
       }
     }
     
@@ -152,23 +180,31 @@ void stageInit(){
 
 void stageProt(){
     tft.fillScreen(ILI9341_GREEN);
-    tft.fillRect(TEXT_WIDTH-8, TEXT_HEIGHT, PLAY_FIELD_WIDTH*TEXT_WIDTH-8, PLAY_FIELD_HEIGHT*TEXT_HEIGHT-16 , ILI9341_BLACK);
+
+    if(MapCharSize==2){ // 2が ノーマルサイズ
+        tft.fillRect(TextWidth-8, TextHeight, PlayFieldWidth*TextWidth-8, PlayFieldHeight*TextHeight-16 , ILI9341_BLACK);
+    }else{
+        tft.fillRect(TextWidth, TextHeight, PlayFieldWidth*TextWidth-8, PlayFieldHeight*TextHeight-8 , TFT_BLACK);
+    }
+
+
 
     // マップデータ描画
-    for (int y = 1; y < PLAY_FIELD_HEIGHT; y += 1) {        
-      for (int x = 1; x < PLAY_FIELD_WIDTH; x += 1) {
+    for (int y = 1; y < PlayFieldHeight; y += 1) {        
+      for (int x = 1; x < PlayFieldWidth; x += 1) {
           if(STAGE[x][y]>0){
-            tft.drawChar( x*TEXT_WIDTH, y*TEXT_HEIGHT,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
+            tft.drawChar( x*TextWidth, y*TextHeight,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK,MapCharSize);
           }
       }
     }
 
     //初期キャラ位置
-    tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
+    tft.drawChar( MyX*TextWidth, MyY*TextHeight,'X',TFT_WHITE, TFT_BLACK,MapCharSize); // 自キャラ表示
     STAGE[MyX][MyY]=0;  // 空白は 0 とする。    
 
-    putString(" NUMBER TRON",0,0,TFT_WHITE,TFT_BLACK,2,11);
-    
+    if(MapCharSize==2){ // 2が ノーマルサイズ
+      putString(" NUMBER TRON",0,0,TFT_WHITE,TFT_BLACK,2,11);
+    }
     scorePut();
 
 }
@@ -270,8 +306,8 @@ int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら
 }
 
 void GameOver(){
-  //tft.drawChar('#', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
-  tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'#',TFT_RED, TFT_BLACK,2); // 自キャラ表示
+  //tft.drawChar('#', MyX*TextWidth, MyY*TextHeight, 2); // 自キャラ表示
+  tft.drawChar( MyX*TextWidth, MyY*TextHeight,'#',TFT_RED, TFT_BLACK,MapCharSize); // 自キャラ表示
   playTone(1614, 1000); 
 
 
@@ -367,7 +403,7 @@ void playerModeSelect(){
       if (digitalRead(WIO_KEY_B) == LOW) { // PlayerMode Change
         if(GameLevel==1){
           GameLevel=2;
-          putRoundRect("Level HIGH",20, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+          putRoundRect("Level HARD",20, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
         }else{
           GameLevel=1;
           putRoundRect("Level EASY",20, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
@@ -385,6 +421,38 @@ void playerModeSelect(){
           }
         }
      }
+
+
+  // Map level Select
+      if (digitalRead(WIO_KEY_A) == LOW) { // MapLevel Change
+        if(MapCharSize==2){
+          MapCharSize=1;
+          TextHeight   = TMS;
+          TextWidth    = TMS;
+          PlayFieldWidth   = PFW;
+          PlayFieldHeight  = PFH;
+          putRoundRect("HARD MAP MODE",40, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+        }else{
+          MapCharSize=2;
+          TextHeight   = TMS * 2;
+          TextWidth    = TMS * 2;
+          PlayFieldWidth   = PFW / 2;
+          PlayFieldHeight  = PFH / 2;
+          putRoundRect("EASY MAP MODE",40, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
+
+        }
+
+        while(1){
+          if (digitalRead(WIO_KEY_A) != LOW) { // PlayerMode Change
+              //stageProt();
+              //sprintf(txt,"Player mode %d !",PlayerMode);
+              //putRoundRect(txt,50, 100,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+              putRoundRect("Press Button to Start",50, 140,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+              break;
+          }
+        }
+     }
+
 
 
 }
@@ -410,17 +478,17 @@ void loop() {
       while(c){
         ox=NowX;
         oy=NowY;
-        tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,'.',ILI9341_GREEN, ILI9341_BLACK, 2); // キー入力方向いったん消し
+        tft.drawChar( (MyX+ox)*TextWidth, (MyY+oy)*TextHeight,'.',ILI9341_GREEN, ILI9341_BLACK, MapCharSize); // キー入力方向いったん消し
         delay(200);
         if(STAGE[MyX+ox][MyY+oy]>0){ // 正の数なら（数字が入っていたら）
-          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, 2);  // 数字再プロット
+          tft.drawChar( (MyX+ox)*TextWidth, (MyY+oy)*TextHeight,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, MapCharSize);  // 数字再プロット
         } else {
-          tft.drawChar( (MyX+ox)*TEXT_WIDTH, (MyY+oy)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2); // 数字でなければ（０）なら空白
+          tft.drawChar( (MyX+ox)*TextWidth, (MyY+oy)*TextHeight,' ',ILI9341_GREEN, ILI9341_BLACK, MapCharSize); // 数字でなければ（０）なら空白
         }
         playTone(1014, 100); 
         c = buttonChk();
       }
-      tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2); // 自キャラ位置消し
+      tft.drawChar( (MyX)*TextWidth, (MyY)*TextHeight,' ',ILI9341_GREEN, ILI9341_BLACK, MapCharSize); // 自キャラ位置消し
       
 
       if(NowPlayer==1){  // スコアアップ
@@ -431,7 +499,7 @@ void loop() {
 
       Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
       int GOF=0;  // GameOver FLAG
-       if(STAGE[MyX+ox][MyY+oy]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){  // 一歩目自殺。これでforループをくくったほうがシンプル？
+       if(STAGE[MyX+ox][MyY+oy]==0 ||MyX<1||MyY<1 || MyX>PlayFieldWidth-1 || MyY>PlayFieldHeight-1  ){  // 一歩目自殺。これでforループをくくったほうがシンプル？
            MyX=MyX+ox;
            MyY=MyY+oy;
            GOF=1;  
@@ -440,7 +508,7 @@ void loop() {
          MyX=MyX+ox;
          MyY=MyY+oy;
          Serial.printf(" MyX:%d MyY:%d ox:%d oy:%d i:%d \n",MyX,MyY,ox,oy,i);
-         if(STAGE[MyX][MyY]==0 ||MyX<1||MyY<1 || MyX>PLAY_FIELD_WIDTH-1 || MyY>PLAY_FIELD_HEIGHT-1  ){
+         if(STAGE[MyX][MyY]==0 ||MyX<1||MyY<1 || MyX>PlayFieldWidth-1 || MyY>PlayFieldHeight-1  ){
             i=0;  // これが必要だったみたい
             //GameOver();
             GOF=1;  // ↑でOKだったが、念のためちゃんとループ脱出するようにしておく。
@@ -448,12 +516,12 @@ void loop() {
          }      
          playTone(1000-STAGE[MyX][MyY]*100, 100);
          playTone(1500, 30); 
-         //tft.drawChar('X', MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT, 2); // 自キャラ表示
-         tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_RED, TFT_BLACK,2); // 自キャラ表示
+         //tft.drawChar('X', MyX*TextWidth, MyY*TextHeight, 2); // 自キャラ表示
+         tft.drawChar( MyX*TextWidth, MyY*TextHeight,'X',TFT_RED, TFT_BLACK,MapCharSize); // 自キャラ表示
           STAGE[MyX][MyY]=0; // キャラ位置データも消去
           delay(200);
       
-          tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
+          tft.drawChar( (MyX)*TextWidth, (MyY)*TextHeight,' ',ILI9341_GREEN, ILI9341_BLACK, MapCharSize);
         
       }
       if(GOF){
@@ -475,9 +543,9 @@ void loop() {
 
     
     }else{
-      tft.drawChar( (MyX)*TEXT_WIDTH, (MyY)*TEXT_HEIGHT,' ',ILI9341_GREEN, ILI9341_BLACK, 2);
+      tft.drawChar( (MyX)*TextWidth, (MyY)*TextHeight,' ',ILI9341_GREEN, ILI9341_BLACK, MapCharSize);
       playTone(1014, 100); 
-      tft.drawChar( MyX*TEXT_WIDTH, MyY*TEXT_HEIGHT,'X',TFT_WHITE, TFT_BLACK,2); // 自キャラ表示
+      tft.drawChar( MyX*TextWidth, MyY*TextHeight,'X',TFT_WHITE, TFT_BLACK,MapCharSize); // 自キャラ表示
       delay(200);
     }
 
@@ -535,7 +603,13 @@ void scorePut(){
         }
       }
     }
-    putRoundRect(scr,228-(w*8),4,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+
+    if(MapCharSize==2){ // 2が ノーマルサイズ
+      putRoundRect(scr,228-(w*8),4,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+    }else{
+      sprintf(scr,"HiSc:%d",HiScore);
+      putRoundRect(scr,120,230,TFT_WHITE,TFT_BLACK,1,8,  4,  TFT_YELLOW);
+    }
 
 
 }
