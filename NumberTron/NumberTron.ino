@@ -1,29 +1,32 @@
+/* NUMBER TRON mini  fot Wio Terminal
+  *    ORIGINAL GAME DESIGN : JACHIM FROHOLT
+  *    Wio Viesion Program :  RASEN KAGURAZAKA
+  */
+ 
+
 #include <TFT_eSPI.h>         // Hardware-specific library
 #include <SPI.h>
 
 TFT_eSPI tft = TFT_eSPI();    // Invoke custom library
 
-/*
-#define TextHeight    16  
-#define TextWidth    16   
-*/
-
-// #define PFW 19
-// #define PFH 14
+#define BUZZER_PIN WIO_BUZZER
 
 
 #define TMS 8     // キャラの最小サイズ（ドット）
 
-int TextHeight   = TMS;
-int TextWidth    = TMS;
 
 #define PFW 38    // プレイフィールドの最大サイズ
 #define PFH 28
 
+#define HART_CHR 231
+#define DIA_CHR 232
+
+int TextHeight   = TMS;
+int TextWidth    = TMS;
+
+
 int PlayFieldWidth   = PFW;
 int PlayFieldHeight  = PFH;
-
-#define BUZZER_PIN WIO_BUZZER
 
 int STAGE[PFW][PFH];
 
@@ -46,6 +49,7 @@ uint16_t ScoreP1;
 uint16_t ScoreP2;
 uint16_t HiScore;
 
+int EatNow=0;
 
 void setup() {
   HiScore=0;
@@ -82,7 +86,6 @@ void firstScreen(){
   putString("NUMBER TRON mini",10, 60,TFT_WHITE, TFT_BLUE, 2,12);
 
   putString("ORIGINAL GAME DESIGN",320-(20*10), 160,TFT_WHITE, TFT_BLUE, 1,10);
-
   putString("JACHIM FROHOLT"              ,320-(14*10), 175,TFT_WHITE, TFT_BLUE, 1,10);
 
   putString("WIO VERSION PROGRAM",320-(19*10), 190,TFT_WHITE, TFT_BLUE, 1,10);
@@ -104,11 +107,7 @@ for(int i=0;i<30;i++){
     playTone(random(200, 2000), 50);
 }
 
-
-
   putRoundRect("You can control it with a 5-Way Switch",6, 230,  TFT_WHITE,TFT_BLACK,1,8, 4,  TFT_BLACK);
-
-
 }
 
 void gameStart(){
@@ -122,8 +121,6 @@ void gameStart(){
     ScoreP2=0;
 
     NowPlayer = 1;
-
-   //stageInit();
     
         if(MapCharSize==2){
           TextHeight   = TMS * 2;
@@ -177,6 +174,15 @@ void stageInit(){
               }
           }
 
+          if(random(0,100)<5){
+            //5%の確率
+            n=-1; // ハートマークはないので、chr(231)の記号　（232がダイヤっぽい記号）
+            if(random(0,100)<10){
+              //さらに１０％の確率
+              n=-2;
+            }
+          }
+
           STAGE[x][y]=n;  // 画面キャラ情報を配列に入れておく
           //tft.drawChar( x*TextWidth, y*TextHeight,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK, 2);
       }
@@ -200,9 +206,19 @@ void stageProt(){
     // マップデータ描画
     for (int y = 1; y < PlayFieldHeight; y += 1) {        
       for (int x = 1; x < PlayFieldWidth; x += 1) {
-          if(STAGE[x][y]>0){
+        MapPointPut(x,y);
+        /*
+          int st =STAGE[x][y];
+          if(st>0){
             tft.drawChar( x*TextWidth, y*TextHeight,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK,MapCharSize);
+          }else{
+            if(st==-1){
+                tft.drawChar( x*TextWidth, y*TextHeight, HART_CHR ,TFT_RED, ILI9341_BLACK,MapCharSize);
+            }else{
+                tft.drawChar( x*TextWidth, y*TextHeight,DIA_CHR  ,TFT_YELLOW, ILI9341_BLACK,MapCharSize);
+            }
           }
+          */
       }
     }
 
@@ -214,6 +230,24 @@ void stageProt(){
       putString(" NUMBER TRON",0,0,TFT_WHITE,TFT_BLACK,2,11);
     }
     scorePut();
+
+}
+
+void MapPointPut(int x,int y){
+ 
+      int st =STAGE[x][y];
+      if(st>0){
+        tft.drawChar( x*TextWidth, y*TextHeight,STAGE[x][y]+48,ILI9341_GREEN-STAGE[x][y]*4, ILI9341_BLACK,MapCharSize);
+      }else{
+        if(st==-1){
+            tft.drawChar( x*TextWidth, y*TextHeight, HART_CHR ,TFT_RED, ILI9341_BLACK,MapCharSize);
+        }else if(st==-2){
+            tft.drawChar( x*TextWidth, y*TextHeight,DIA_CHR  ,TFT_YELLOW, ILI9341_BLACK,MapCharSize);
+        }else{
+         //残るは０のはず
+          tft.drawChar( x*TextWidth, y*TextHeight,'  '  ,TFT_BLACK, ILI9341_BLACK,MapCharSize);
+        }
+      }
 
 }
 
@@ -284,7 +318,7 @@ int buttonChk(){  // 入力方向はNowXとNowYに入り、入力があったら
       case '5':
         NowX=0;
         NowY=0;  
-        //r=1;
+        r=1;
         break;
       case '6':
         NowX=+1;
@@ -416,14 +450,10 @@ void playerModeSelect(){
           GameLevel=1;
           putRoundRect("Level EASY",20, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
         }
-        //sprintf(txt,"Game Level  %d",PlayerMode);
 
-        //putRoundRect(txt,10, 10,  TFT_YELLOW,TFT_BLACK,1,8, 4,  TFT_YELLOW);
         while(1){
           if (digitalRead(WIO_KEY_B) != LOW) { // PlayerMode Change
-              //stageProt();
-              //sprintf(txt,"Player mode %d !",PlayerMode);
-              //putRoundRect(txt,50, 100,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+
               putRoundRect("Press Button to Start",50, 140,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
               break;
           }
@@ -452,9 +482,7 @@ void playerModeSelect(){
 
         while(1){
           if (digitalRead(WIO_KEY_A) != LOW) { // PlayerMode Change
-              //stageProt();
-              //sprintf(txt,"Player mode %d !",PlayerMode);
-              //putRoundRect(txt,50, 100,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
+
               putRoundRect("Press Button to Start",50, 140,  TFT_YELLOW,TFT_BLACK,2,10, 8,  TFT_YELLOW);
               break;
           }
@@ -467,7 +495,7 @@ void playerModeSelect(){
 
 
 void loop() {
-//  String s;
+
   char s[100];
  int b;
     //Serial.printf("NowX:%d , NowY:%d \n",NowX,NowY);
@@ -488,31 +516,42 @@ void loop() {
         oy=NowY;
         tft.drawChar( (MyX+ox)*TextWidth, (MyY+oy)*TextHeight,'.',ILI9341_GREEN, ILI9341_BLACK, MapCharSize); // キー入力方向いったん消し
         delay(200);
-        if(STAGE[MyX+ox][MyY+oy]>0){ // 正の数なら（数字が入っていたら）
-          tft.drawChar( (MyX+ox)*TextWidth, (MyY+oy)*TextHeight,STAGE[MyX+ox][MyY+oy]+48,ILI9341_GREEN, ILI9341_BLACK, MapCharSize);  // 数字再プロット
-        } else {
-          tft.drawChar( (MyX+ox)*TextWidth, (MyY+oy)*TextHeight,' ',ILI9341_GREEN, ILI9341_BLACK, MapCharSize); // 数字でなければ（０）なら空白
-        }
+        MapPointPut(MyX+ox,MyY+oy); // 数字再プロット
         playTone(1014, 100); 
         c = buttonChk();
       }
       tft.drawChar( (MyX)*TextWidth, (MyY)*TextHeight,' ',ILI9341_GREEN, ILI9341_BLACK, MapCharSize); // 自キャラ位置消し
       
-
+      EatNow=STAGE[MyX+ox][MyY+oy];
+      if(EatNow==-1){ // 一歩目に♡を食べたら
+        EatNow=1; // １に変化
+        luckBell1();
+      }
+      if(EatNow==-2){ // 一歩目にダイヤを食べたら
+        EatNow=1; // １に変化
+        /*
+        luckBell2();
+          if(NowPlayer==1){  // スコアアップ
+              ScoreP1=ScoreP1 * 2;  
+          }else{
+              ScoreP2=ScoreP2 * 2;  
+          }
+          */
+      }
       if(NowPlayer==1){  // スコアアップ
-          ScoreP1=ScoreP1+STAGE[MyX+ox][MyY+oy];  
+          ScoreP1=ScoreP1+EatNow;  
       }else{
-          ScoreP2=ScoreP2+STAGE[MyX+ox][MyY+oy];  
+          ScoreP2=ScoreP2+EatNow;  
       }
 
       Serial.printf("\n >> ox:%d oy:%d Get:%d\n",ox,oy,STAGE[MyX+ox][MyY+oy]);
       int GOF=0;  // GameOver FLAG
-       if(STAGE[MyX+ox][MyY+oy]==0 ||MyX<1||MyY<1 || MyX>PlayFieldWidth-1 || MyY>PlayFieldHeight-1  ){  // 一歩目自殺。これでforループをくくったほうがシンプル？
+       if(EatNow==0 ||MyX<1||MyY<1 || MyX>PlayFieldWidth-1 || MyY>PlayFieldHeight-1  ){  // 一歩目自殺。これでforループをくくったほうがシンプル？
            MyX=MyX+ox;
            MyY=MyY+oy;
            GOF=1;  
        }      
-      for(int i=STAGE[MyX+ox][MyY+oy];i>0;i=i-1){
+      for(int i=EatNow; i>0 ; i=i-1){
          MyX=MyX+ox;
          MyY=MyY+oy;
          Serial.printf(" MyX:%d MyY:%d ox:%d oy:%d i:%d \n",MyX,MyY,ox,oy,i);
@@ -521,7 +560,25 @@ void loop() {
             //GameOver();
             GOF=1;  // ↑でOKだったが、念のためちゃんとループ脱出するようにしておく。
             break;
-         }      
+         }
+          if(STAGE[MyX][MyY]==-1){ // ハートを食べた！
+              if(NowPlayer==1){  // スコアアップ 
+                  ScoreP1=ScoreP1+EatNow * 2;   // 2倍になるので最初と加えて3倍
+              }else{
+                  ScoreP2=ScoreP2+EatNow * 2;  
+              }
+              luckBell1();
+          }
+
+          if(STAGE[MyX][MyY]==-2){ // ダイヤを食べた！
+              if(NowPlayer==1){  // スコアアップ 
+                  ScoreP1=ScoreP1 * 2; 
+              }else{
+                  ScoreP2=ScoreP2 * 2;  
+              }
+              luckBell2();
+          }
+
          playTone(1000-STAGE[MyX][MyY]*100, 100);
          playTone(1500, 30); 
          //tft.drawChar('X', MyX*TextWidth, MyY*TextHeight, 2); // 自キャラ表示
@@ -560,6 +617,23 @@ void loop() {
   }
  
 }
+
+void luckBell1(){
+      playTone(514, 10); 
+      delay(40); 
+      playTone(414, 20); 
+      delay(40);   
+}
+
+void luckBell2(){
+      for(int i=1000;i<500;i=i-100){
+          playTone(i, 100); 
+          delay(40); 
+      }
+      playTone(414, 20); 
+      delay(40);   
+}
+
 
 void playerInfo(){
       //Player Info
