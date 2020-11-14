@@ -177,9 +177,13 @@ void stageInit(){
           if(random(0,100)<5){
             //5%の確率
             n=-1; // ハートマークはないので、chr(231)の記号　（232がダイヤっぽい記号）
-            if(random(0,100)<10){
-              //さらに１０％の確率
-              n=-2;
+            if(random(0,100)<50){
+              //さらに5０％の確率
+              n=0;
+                if(random(0,100)<30){
+                  //さらに3０％の確率
+                  n=-2;
+                }
             }
           }
 
@@ -242,7 +246,7 @@ void MapPointPut(int x,int y){
         if(st==-1){
             tft.drawChar( x*TextWidth, y*TextHeight, HART_CHR ,TFT_RED, ILI9341_BLACK,MapCharSize);
         }else if(st==-2){
-            tft.drawChar( x*TextWidth, y*TextHeight,DIA_CHR  ,TFT_YELLOW, ILI9341_BLACK,MapCharSize);
+            tft.drawChar( x*TextWidth, y*TextHeight,DIA_CHR  ,TFT_BLACK, TFT_YELLOW,MapCharSize); // 反転させて目立たせる
         }else{
          //残るは０のはず
           tft.drawChar( x*TextWidth, y*TextHeight,'  '  ,TFT_BLACK, ILI9341_BLACK,MapCharSize);
